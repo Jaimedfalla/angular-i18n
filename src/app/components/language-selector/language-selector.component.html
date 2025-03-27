@@ -1,0 +1,10 @@
+<select
+  class="flex"
+  (change)="onChangeLanguage($event)"
+  [value]="currentLang()">
+  @for (language of languages(); track language.code) {
+    <option [value]="language.code">
+      {{ language.code }} {{ language.flag }}
+    </option>
+  }
+</select>

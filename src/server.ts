@@ -31,8 +31,8 @@ app.get(
   '**',
   express.static(browserDistFolder, {
     maxAge: '1y',
-    index: 'index.html'
-  }),
+    index: 'index.html',
+  })
 );
 
 /**
@@ -40,6 +40,12 @@ app.get(
  */
 app.get('**', (req, res, next) => {
   const { protocol, originalUrl, baseUrl, headers } = req;
+  const cookies = headers.cookie ?? '';
+  const lang =
+    cookies
+      .split(';')
+      .find(cookie => cookie.includes('lang'))
+      ?.split('=')[1] ?? 'en';
 
   commonEngine
     .render({
@@ -47,10 +53,18 @@ app.get('**', (req, res, next) => {
       documentFilePath: indexHtml,
       url: `${protocol}://${headers.host}${originalUrl}`,
       publicPath: browserDistFolder,
-      providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
+      providers: [
+        { provide: APP_BASE_HREF, useValue: baseUrl },
+        { provide: 'REQUEST', useValue: req },
+        { provide: 'RESPONSE', useValue: res },
+        {
+          provide: 'SERVER_LANG_TOKEN',
+          useValue: lang,
+        },
+      ],
     })
-    .then((html) => res.send(html))
-    .catch((err) => next(err));
+    .then(html => res.send(html))
+    .catch(err => next(err));
 });
 
 /**
